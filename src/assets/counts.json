@@ -1,0 +1,34 @@
+{
+  "keys": [
+    "lang",
+    "year",
+    "quarter",
+    "push5"
+  ],
+  "rows": [
+    [
+      "1C Enterprise",
+      2010,
+      1,
+      1
+    ],
+    [
+      "ABAP",
+      2010,
+      1,
+      0
+    ],
+    [
+      "ActionScript",
+      2010,
+      1,
+      43
+    ],
+    [
+      "Ada",
+      2010,
+      1,
+      0
+    ]
+  ]
+}
