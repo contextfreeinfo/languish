@@ -146,6 +146,12 @@ async function fetchWithRateLimit(url: URL) {
   return response.json();
 }
 
+const saveTable = async () => {
+  const table = tablify(rows);
+  await Bun.write(countsFile, JSON.stringify(table, undefined, "  "));
+  console.log(`Saving at ${rows.length}`);
+};
+
 requests: for (const request of requests()) {
   if (dones.has(rowKey(request.langTime))) {
     continue requests;
@@ -164,10 +170,10 @@ requests: for (const request of requests()) {
   } as CountRow;
   rows.push(row);
   console.log(row);
-  if (rows.length >= 3) {
-    break;
+  if (rows.length % 10 == 0) {
+    await saveTable();
   }
 }
 
-const table = tablify(rows);
-await Bun.write(countsFile, JSON.stringify(table, undefined, "  "));
+await saveTable();
+console.log("Finished");
