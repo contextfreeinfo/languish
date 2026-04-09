@@ -24,9 +24,7 @@ const untablify = <Item extends {}>(table: Table<Item>): Item[] => {
   });
 };
 
-const countsFile = Bun.file(
-  join(import.meta.dir, "..", "src", "assets", "counts.json"),
-);
+const countsFile = Bun.file(join(import.meta.dir, "counts.json"));
 
 interface CountRowKey {
   lang: string;
@@ -126,29 +124,37 @@ const requests = function* () {
   }
 };
 
-async function fetchWithRateLimit(url: URL) {
+async function fetchWithRateLimit(url: URL, tries?: number): Promise<unknown> {
   const response = await fetch(url);
   // Get rate limit headers.
   const remaining = Number(response.headers.get("x-ratelimit-remaining"));
   const resetTimestamp = Number(response.headers.get("x-ratelimit-reset"));
   // Space according to limits.
   const now = Math.floor(Date.now());
-  const remainingMillis = resetTimestamp * 1000 - now + 500; // add slack
-  const delayMillis = remainingMillis / (remaining + 1);
+  // Add slack.
+  const remainingMillis = resetTimestamp * 1000 - now + 1000;
+  const delayMillis = remainingMillis / Math.max(remaining, 1);
   console.log(delayMillis);
   await Bun.sleep(delayMillis);
-  // Then return.
+  // Check for errors.
   if (!response.ok) {
-    // TODO Handle the "Out of Gas" scenario (Status 403 or 429)?
-    console.warn(response.statusText);
-    return null;
+    // Typically "rate limit exceeded" so far.
+    console.warn(`${response.status} ${response.statusText} on ${url}`);
+    tries = (tries || 0) + 1;
+    return tries < 3 ? fetchWithRateLimit(url, tries) : null;
   }
+  // Return.
   return response.json();
 }
 
 const saveTable = async () => {
+  rows.sort((a, b) => {
+    return (
+      a.lang.localeCompare(b.lang) || a.year - b.year || a.quarter - b.quarter
+    );
+  });
   const table = tablify(rows);
-  await Bun.write(countsFile, JSON.stringify(table, undefined, "  "));
+  await Bun.write(countsFile, JSON.stringify(table, undefined, " "));
   console.log(`Saving at ${rows.length}`);
 };
 
