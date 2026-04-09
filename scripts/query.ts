@@ -125,6 +125,7 @@ const requests = function* () {
 };
 
 async function fetchWithRateLimit(url: URL, tries?: number): Promise<unknown> {
+  console.log(url.href);
   const response = await fetch(url);
   // Get rate limit headers.
   const remaining = Number(response.headers.get("x-ratelimit-remaining"));
