@@ -93,7 +93,7 @@ const requests = function* () {
         const stars = 5;
         // This is how many repos had at least one push during the quarter.
         const queryParams = {
-          language: key,
+          language: `"${key}"`,
           pushed: `${year}-${quarterEdge[0]}..${year}-${quarterEdge[1]}`,
           // created: `${year}-${quarterEdge[0]}..${year}-${quarterEdge[1]}`,
           // is: "pr",
