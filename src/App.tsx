@@ -1,4 +1,4 @@
-import { createSignal } from "solid-js";
+import { createSignal, createEffect, Show } from "solid-js";
 import solidLogo from "./assets/solid.svg";
 import viteLogo from "./assets/vite.svg";
 import heroImg from "./assets/hero.png";
@@ -20,6 +20,11 @@ const untablify = <Item extends {}>(table: Table<Item>): Item[] => {
 };
 
 const MyChart = () => {
+  const [isReady, setIsReady] = createSignal(false);
+  // createEffect runs after the component is added to the DOM
+  createEffect(() => {
+    setIsReady(true);
+  });
   // const bus = createPluginBus<CursorPluginMessageBus>();
   const rows = untablify(counts);
   const py = rows.filter((row) => row.lang == "Python");
@@ -34,23 +39,28 @@ const MyChart = () => {
     .map((row) => row.push5);
 
   return (
-    <SolidUplot
-      data={[x, pyCounts, jsCounts, tsCounts]}
-      width={600}
-      height={400}
-      series={[
-        {},
-        { label: "Series 1", stroke: "#1f77b4" },
-        { label: "Series 2", stroke: "#ff7f0e" },
-        { label: "Series 2", stroke: "#40af0e" },
-      ]}
-      // plugins={[
-      //   cursor(),
-      //   tooltip(MyTooltip),
-      //   legend(MyLegend, { placement: "top-right", pxOffset: 12 }),
-      // ]}
-      // pluginBus={bus}
-    />
+    <div id="chart-container" style={{ width: "600px", height: "400px" }}>
+      <Show when={isReady()}>
+        <SolidUplot
+          autoResize={true}
+          data={[x, pyCounts, jsCounts, tsCounts]}
+          width={600}
+          height={400}
+          series={[
+            {},
+            { label: "Series 1", stroke: "#1f77b4" },
+            { label: "Series 2", stroke: "#ff7f0e" },
+            { label: "Series 2", stroke: "#40af0e" },
+          ]}
+          // plugins={[
+          //   cursor(),
+          //   tooltip(MyTooltip),
+          //   legend(MyLegend, { placement: "top-right", pxOffset: 12 }),
+          // ]}
+          // pluginBus={bus}
+        />
+      </Show>
+    </div>
   );
 };
 
