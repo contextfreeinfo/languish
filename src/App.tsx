@@ -4,7 +4,55 @@ import viteLogo from "./assets/vite.svg";
 import heroImg from "./assets/hero.png";
 import "./App.css";
 import counts from "@counts";
-// import type { CountRow, Table } from "@counts";
+import type { Table } from "@counts";
+import { SolidUplot } from "@dschz/solid-uplot";
+
+const untablify = <Item extends {}>(table: Table<Item>): Item[] => {
+  const { keys, rows } = table;
+  return rows.map((row) => {
+    // Reduce the row array back into an object
+    return row.reduce((acc, value, index) => {
+      const key = keys[index];
+      acc[key] = value;
+      return acc;
+    }, {} as Item);
+  });
+};
+
+const MyChart = () => {
+  // const bus = createPluginBus<CursorPluginMessageBus>();
+  const rows = untablify(counts);
+  const py = rows.filter((row) => row.lang == "Python");
+  // const labels = py.map((row) => `${row.year}Q${row.quarter}`);
+  const x = [...Array(py.length).keys()];
+  const pyCounts = py.map((row) => row.push5);
+  const jsCounts = rows
+    .filter((row) => row.lang == "JavaScript")
+    .map((row) => row.push5);
+  const tsCounts = rows
+    .filter((row) => row.lang == "TypeScript")
+    .map((row) => row.push5);
+
+  return (
+    <SolidUplot
+      data={[x, pyCounts, jsCounts, tsCounts]}
+      width={600}
+      height={400}
+      series={[
+        {},
+        { label: "Series 1", stroke: "#1f77b4" },
+        { label: "Series 2", stroke: "#ff7f0e" },
+        { label: "Series 2", stroke: "#40af0e" },
+      ]}
+      // plugins={[
+      //   cursor(),
+      //   tooltip(MyTooltip),
+      //   legend(MyLegend, { placement: "top-right", pxOffset: 12 }),
+      // ]}
+      // pluginBus={bus}
+    />
+  );
+};
 
 function App() {
   const [count, setCount] = createSignal(0);
@@ -25,6 +73,9 @@ function App() {
           <p>
             {JSON.stringify(counts.keys)} with {counts.rows.length} rows
           </p>
+        </div>
+        <div>
+          <MyChart />
         </div>
         <button class="counter" onClick={() => setCount((count) => count + 1)}>
           Count is {count()}
