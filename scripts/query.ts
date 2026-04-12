@@ -175,6 +175,8 @@ requests: for (const request of requests()) {
     ...rowKeyObj(request.langTime),
     [`push${request.langTime.stars}`]: response.total_count,
   } as CountRow;
+  // Keep even zero counts here so we know we grabbed the data.
+  // We strip zero counts out when importing the data into the app.
   rows.push(row);
   console.log(row);
   if (rows.length % 10 == 0) {
