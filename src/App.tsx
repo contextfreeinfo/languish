@@ -1,11 +1,21 @@
-import { createSignal, createEffect, Show } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import solidLogo from "./assets/solid.svg";
 import viteLogo from "./assets/vite.svg";
 import heroImg from "./assets/hero.png";
 import "./App.css";
 import counts from "@counts";
 import type { Table } from "@counts";
-import { SolidUplot } from "@dschz/solid-uplot";
+import { Line } from "solid-chartjs";
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  LineElement,
+  LinearScale,
+  CategoryScale,
+  PointElement,
+} from "chart.js";
 
 const untablify = <Item extends {}>(table: Table<Item>): Item[] => {
   const { keys, rows } = table;
@@ -19,17 +29,39 @@ const untablify = <Item extends {}>(table: Table<Item>): Item[] => {
   });
 };
 
+// window.onload = () => {
+//   // This forces the browser to re-evaluate the layout and paint tree
+//   window.dispatchEvent(new Event("resize"));
+//   // Or, "wiggle" the mouse programmatically over the body
+//   document.body.dispatchEvent(
+//     new MouseEvent("mousemove", {
+//       view: window,
+//       bubbles: true,
+//       cancelable: true,
+//     }),
+//   );
+// };
+
 const MyChart = () => {
   const [isReady, setIsReady] = createSignal(false);
-  // createEffect runs after the component is added to the DOM
-  createEffect(() => {
+  // Register Chart.js modules on mount
+  onMount(() => {
+    ChartJS.register(
+      Title,
+      Tooltip,
+      Legend,
+      LineElement,
+      LinearScale,
+      CategoryScale,
+      PointElement,
+    );
     setIsReady(true);
   });
-  // const bus = createPluginBus<CursorPluginMessageBus>();
+  // Data processing logic
   const rows = untablify(counts);
   const py = rows.filter((row) => row.lang == "Python");
-  // const labels = py.map((row) => `${row.year}Q${row.quarter}`);
-  const x = [...Array(py.length).keys()];
+  // Chart.js requires labels for the X-axis (e.g., "2026Q1") instead of raw index arrays
+  const labels = py.map((row) => `${row.year}Q${row.quarter}`);
   const pyCounts = py.map((row) => row.push5);
   const jsCounts = rows
     .filter((row) => row.lang == "JavaScript")
@@ -37,28 +69,41 @@ const MyChart = () => {
   const tsCounts = rows
     .filter((row) => row.lang == "TypeScript")
     .map((row) => row.push5);
-
+  // Format data specifically for Chart.js structure
+  const chartData = () => ({
+    labels: labels,
+    datasets: [
+      {
+        label: "Python",
+        data: pyCounts,
+        borderColor: "#1f77b4",
+        backgroundColor: "#1f77b4",
+        tension: 0.1, // Smooth lines slightly if desired
+      },
+      {
+        label: "JavaScript",
+        data: jsCounts,
+        borderColor: "#ff7f0e",
+        backgroundColor: "#ff7f0e",
+        tension: 0.1,
+      },
+      {
+        label: "TypeScript",
+        data: tsCounts,
+        borderColor: "#40af0e",
+        backgroundColor: "#40af0e",
+        tension: 0.1,
+      },
+    ],
+  });
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+  };
   return (
     <div id="chart-container" style={{ width: "600px", height: "400px" }}>
       <Show when={isReady()}>
-        <SolidUplot
-          autoResize={true}
-          data={[x, pyCounts, jsCounts, tsCounts]}
-          width={600}
-          height={400}
-          series={[
-            {},
-            { label: "Series 1", stroke: "#1f77b4" },
-            { label: "Series 2", stroke: "#ff7f0e" },
-            { label: "Series 2", stroke: "#40af0e" },
-          ]}
-          // plugins={[
-          //   cursor(),
-          //   tooltip(MyTooltip),
-          //   legend(MyLegend, { placement: "top-right", pxOffset: 12 }),
-          // ]}
-          // pluginBus={bus}
-        />
+        <Line data={chartData()} options={chartOptions} />
       </Show>
     </div>
   );
