@@ -13,8 +13,10 @@ import {
   LinearScale,
   CategoryScale,
   PointElement,
+  type ChartDataset,
 } from "chart.js";
-import { loadCountRows } from "./data";
+import { percentize, loadCountRows } from "./data";
+import colors from "github-colors/colors.json" with { type: "json" };
 
 // window.onload = () => {
 //   // This forces the browser to re-evaluate the layout and paint tree
@@ -45,43 +47,34 @@ const MyChart = () => {
     setIsReady(true);
   });
   // Data processing logic
-  const rows = loadCountRows();
+  const rows = percentize(loadCountRows());
+  const langs = [
+    "Python",
+    "JavaScript",
+    "TypeScript",
+    "Java",
+    "C#",
+    "C++",
+    "Go",
+    "Rust",
+    "C",
+    "PHP",
+  ];
+  // Any language is good enough for labels.
   const py = rows.filter((row) => row.lang == "Python");
-  // Chart.js requires labels for the X-axis (e.g., "2026Q1") instead of raw index arrays
-  const labels = py.map((row) => `${row.year}Q${row.quarter}`);
-  const pyCounts = py.map((row) => row.push5);
-  const jsCounts = rows
-    .filter((row) => row.lang == "JavaScript")
-    .map((row) => row.push5);
-  const tsCounts = rows
-    .filter((row) => row.lang == "TypeScript")
-    .map((row) => row.push5);
-  // Format data specifically for Chart.js structure
-  const chartData = () => ({
-    labels: labels,
-    datasets: [
-      {
-        label: "Python",
-        data: pyCounts,
-        borderColor: "#1f77b4",
-        backgroundColor: "#1f77b4",
-        tension: 0.1, // Smooth lines slightly if desired
-      },
-      {
-        label: "JavaScript",
-        data: jsCounts,
-        borderColor: "#ff7f0e",
-        backgroundColor: "#ff7f0e",
-        tension: 0.1,
-      },
-      {
-        label: "TypeScript",
-        data: tsCounts,
-        borderColor: "#40af0e",
-        backgroundColor: "#40af0e",
-        tension: 0.1,
-      },
-    ],
+  const charData = () => ({
+    labels: py.map((row) => `${row.year}Q${row.quarter}`),
+    datasets: langs.map((lang): ChartDataset => {
+      // TODO Better default colors.
+      const color = colors[lang as keyof typeof colors].color ?? "white";
+      return {
+        label: lang,
+        data: rows.filter((row) => row.lang == lang).map((row) => row.push5),
+        borderColor: color,
+        backgroundColor: color,
+        tension: 0.2,
+      }
+    })
   });
   const chartOptions = {
     responsive: true,
@@ -90,7 +83,7 @@ const MyChart = () => {
   return (
     <div id="chart-container">
       <Show when={isReady()}>
-        <Line data={chartData()} options={chartOptions} />
+        <Line data={charData()} options={chartOptions} />
       </Show>
     </div>
   );
@@ -101,7 +94,7 @@ function App() {
   return (
     <div id="app">
       <MyChart />
-      <section>
+      <section style={{ display: "none" }}>
         <button class="counter" onClick={() => setCount((count) => count + 1)}>
           Count is {count()}
         </button>

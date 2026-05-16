@@ -1,7 +1,24 @@
 import counts from "@counts";
-import type { Table } from "@counts";
+import type { CountRow, CountRowKey, Table } from "@counts";
 
-export const loadCountRows = () => {
+export const dateKey = (row: CountRowKey): number => {
+  // Leaving the 0 in the middle might make reading easier.
+  return row.year * 100 + row.quarter;
+}
+
+export const percentize = (rows: CountRow[]): CountRow[] => {
+  const sums = new Map<number, number>();
+  for (const row of rows) {
+    const key = dateKey(row);
+    sums.set(key, (sums.get(key) ?? 0) + row.push5);
+  }
+  const outRows = rows.map((row) => {
+    return { ...row, push5: 100 * row.push5 / sums.get(dateKey(row))! };
+  })
+  return outRows;
+}
+
+export const loadCountRows = (): CountRow[] => {
   const rows = untablify(counts);
   // Find min date.
   let minYear = Number.MAX_SAFE_INTEGER;

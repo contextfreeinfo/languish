@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "chart.js": "^4.5.1",
+    "github-colors": "github:ozh/github-colors#ef7eeea",
     "solid-chartjs": "^1.3.11",
     "solid-js": "^1.9.11"
   },
